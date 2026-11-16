@@ -1,0 +1,8 @@
+- id: keepmeachangelog-lint
+  name: keep a changelog lint
+  description: Validate CHANGELOG.md against Keep a Changelog 1.1.0
+  entry: keepmeachangelog
+  language: python
+  language_version: python3
+  files: (?i)(^|/)changelog(\.md)?$
+  types: [text]
