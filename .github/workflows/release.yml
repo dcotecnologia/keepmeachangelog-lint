@@ -1,0 +1,61 @@
+name: Release
+on:
+  push:
+    tags:
+      - "v*"
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+permissions:
+  contents: write
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Read project version
+        id: vars
+        run: |
+          set -euo pipefail
+          version="$(python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
+          if [ "${GITHUB_REF_NAME}" != "v${version}" ]; then
+            echo "Tag ${GITHUB_REF_NAME} does not match pyproject.toml version v${version}" >&2
+            exit 1
+          fi
+          echo "project_version=${version}" >> "$GITHUB_OUTPUT"
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v10.3.0
+
+      - name: Lint the changelog with this project
+        run: uv run keepmeachangelog --validation-depth 10 --version-from pyproject.toml CHANGELOG.md
+
+      - name: Run tests
+        run: uv run --group test pytest
+
+      - name: Recupera o histórico da versão para a criação da release
+        id: changelog_reader
+        uses: mindsers/changelog-reader-action@v2
+        with:
+          validation_level: error
+          validation_depth: 10
+          version: ${{ steps.vars.outputs.project_version }}
+          path: ./CHANGELOG.md
+
+      - name: Build
+        run: uv build
+
+      - name: Cria a release no Github para a versão
+        uses: ncipollo/release-action@v1
+        with:
+          tag: v${{ steps.vars.outputs.project_version }}
+          name: v${{ steps.vars.outputs.project_version }}
+          body: ${{ steps.changelog_reader.outputs.changes }}
+          artifacts: dist/*
+          prerelease: ${{ steps.changelog_reader.outputs.status == 'prereleased' }}
+          draft: ${{ steps.changelog_reader.outputs.status == 'unreleased' }}
+          allowUpdates: false
+          token: ${{ secrets.GITHUB_TOKEN }}
