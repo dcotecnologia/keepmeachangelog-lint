@@ -25,6 +25,10 @@ ALIASES = {
     "bugfix": "Fixed",
     "bugfixes": "Fixed",
 }
+# sections allowed per release type, same as mindsers/changelog-reader-action
+PATCH_ALLOWED = ("fixed", "security")
+MINOR_ALLOWED = ("added", "changed", "deprecated", "fixed", "security")
+MAJOR_ALLOWED = ("added", "removed", "changed", "deprecated", "fixed", "security")
 # tolerant: also matches "## 1.0.0 - date", "## [v1.0.0]-date", "## [unreleased]"
 HEADING_RE = re.compile(
     r"^##\s+\[?v?(?P<v>unreleased|\d[^\]\s]*)\]?"
@@ -49,6 +53,7 @@ class Config:
     validation_depth: int | None = None  # only the latest N versions; None = all
     repo_url: str | None = None  # e.g. https://github.com/owner/repo (else inferred)
     tag_prefix: str = "v"
+    version: str | None = None  # the changelog must have an entry for this version
 
 
 DEFAULT = Config()
@@ -71,6 +76,34 @@ def _semver_key(v: str) -> tuple:
             (0, int(p), "") if p.isdigit() else (1, 0, p) for p in pre[1:].split(".")
         ),
     )
+
+
+def _release_diff(older: str, newer: str) -> str | None:
+    """Replicate node-semver `diff` (pre* collapsed): major/minor/patch/prerelease."""
+    ko, kn = _semver_key(older), _semver_key(newer)
+    if ko == kn:
+        return None
+    low, high = (older, newer) if ko < kn else (newer, older)
+
+    def parts(v: str) -> tuple[int, int, int, bool]:
+        m = SEMVER_RE.match(v)
+        assert m is not None
+        return int(m[1]), int(m[2]), int(m[3]), bool(m[4])
+
+    lmaj, lmin, lpat, lpre = parts(low)
+    hmaj, hmin, hpat, hpre = parts(high)
+    if lpre and not hpre:
+        if not lpat and not lmin:
+            return "major"
+        if (lmaj, lmin, lpat) == (hmaj, hmin, hpat):
+            return "minor" if lmin and not lpat else "patch"
+    if lmaj != hmaj:
+        return "major"
+    if lmin != hmin:
+        return "minor"
+    if lpat != hpat:
+        return "patch"
+    return "prerelease"
 
 
 def canonical_name(v: str) -> str:
@@ -216,13 +249,19 @@ def lint(text: str, config: Config = DEFAULT) -> list[Problem]:
     links: dict[str, tuple[int, str]] = {}
     seen_versions: set[str] = set()
     section_seen: set[str] = set()
+    sections_by_version: dict[str, list[str]] = {}
     cur_version: str | None = None
     cur_section: tuple[int, str] | None = None
     section_has_content = False
     in_fence = False
 
     def close_section() -> None:
-        if cur_section and not section_has_content and not config.allow_empty_sections:
+        if (
+            cur_section
+            and not section_has_content
+            and not config.allow_empty_sections
+            and cur_version != "Unreleased"  # the release action skips Unreleased
+        ):
             out.append(Problem(cur_section[0], f"empty section '### {cur_section[1]}'"))
 
     for n, line in enumerate(lines, 1):
@@ -290,6 +329,8 @@ def lint(text: str, config: Config = DEFAULT) -> list[Problem]:
             if name in section_seen:
                 out.append(Problem(n, f"duplicate section '{name}' in [{cur_version}]"))
             section_seen.add(name)
+            if cur_version is not None:
+                sections_by_version.setdefault(cur_version, []).append(name.lower())
         elif line.strip() and cur_section:
             section_has_content = True
     close_section()
@@ -304,7 +345,30 @@ def lint(text: str, config: Config = DEFAULT) -> list[Problem]:
         if pd and d and pd < d:
             out.append(Problem(n, f"[{v}] is dated after [{pv}] (latest first)"))
 
+    # same window as the release action: the newest `validation_depth` released
+    # versions (Unreleased excluded); each is compared with the next older one
+    rel = [(n, v) for n, v, _ in versions if v != "Unreleased" and SEMVER_RE.match(v)]
+    depth = config.validation_depth
+    window = rel if depth is None else rel[:depth]
+    for (n, v), (_, older) in itertools.pairwise(window):
+        kind = _release_diff(older, v)
+        if kind is None:
+            continue
+        allowed = {"patch": PATCH_ALLOWED, "minor": MINOR_ALLOWED}.get(
+            kind, MAJOR_ALLOWED
+        )
+        if any(sec not in allowed for sec in sections_by_version.get(v, [])):
+            out.append(
+                Problem(
+                    n,
+                    f"only '{', '.join(allowed)}' sections are allowed for version "
+                    f"{v} ({kind} release after {older})",
+                )
+            )
+
     names = [v for _, v, _ in versions]
+    if config.version is not None and config.version not in names:
+        out.append(Problem(1, f"no changelog entry for version {config.version}"))
     for label, (n, url) in links.items():
         if not version_like(label):
             continue
@@ -322,8 +386,7 @@ def lint(text: str, config: Config = DEFAULT) -> list[Problem]:
 
     out += _format_problems(text, config)
     result = sorted(out)
-    depth = config.validation_depth
-    if depth is not None and len(versions) > depth:
-        cutoff = versions[depth][0]
+    if depth is not None and len(rel) > depth:
+        cutoff = rel[depth][0]
         result = [p for p in result if p.line < cutoff]
     return result

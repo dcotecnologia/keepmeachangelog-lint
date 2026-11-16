@@ -20,6 +20,10 @@ def load_config(path: Path) -> Config:
         "require-links",
         "allow-empty-sections",
         "validation-depth",
+        "repo-url",
+        "tag-prefix",
+        "version",
+        "version-from",
     }
     if unknown := set(data) - known:
         raise ValueError(f"unknown option(s): {', '.join(sorted(unknown))}")
@@ -34,7 +38,15 @@ def load_config(path: Path) -> Config:
         validation_depth=data.get("validation-depth", base.validation_depth),
         repo_url=data.get("repo-url", base.repo_url),
         tag_prefix=data.get("tag-prefix", base.tag_prefix),
+        version=_version_from(data["version-from"])
+        if "version-from" in data
+        else data.get("version", base.version),
     )
+
+
+def _version_from(path: str) -> str:
+    """Read [project].version from a pyproject.toml."""
+    return tomllib.loads(Path(path).read_text(encoding="utf-8"))["project"]["version"]
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -50,6 +62,12 @@ def main(argv: list[str] | None = None) -> int:
         metavar="N",
         help="only validate the latest N versions (default: all)",
     )
+    p.add_argument("--version", help="require a changelog entry for this version")
+    p.add_argument(
+        "--version-from",
+        metavar="PYPROJECT",
+        help="like --version, read from [project].version of a pyproject.toml",
+    )
     p.add_argument(
         "--fix",
         action="store_true",
@@ -58,10 +76,17 @@ def main(argv: list[str] | None = None) -> int:
     args = p.parse_args(argv)
     try:
         config = load_config(args.config) if args.config else Config()
+        if args.version_from:
+            config = replace(config, version=_version_from(args.version_from))
+        if args.version:
+            config = replace(config, version=args.version)
         if args.validation_depth is not None:
             config = replace(config, validation_depth=args.validation_depth)
-    except (OSError, ValueError) as e:  # TOMLDecodeError is a ValueError
-        print(f"{args.config}: invalid config: {e}", file=sys.stderr)
+    except (OSError, ValueError, KeyError) as e:  # TOMLDecodeError is a ValueError
+        print(
+            f"{args.config or args.version_from}: invalid config: {e!r}",
+            file=sys.stderr,
+        )
         return 2
     rc = 0
     for f in args.files:

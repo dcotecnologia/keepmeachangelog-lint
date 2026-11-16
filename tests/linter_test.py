@@ -72,13 +72,13 @@ def test_cli(tmp_path, capsys):
 def test_config(tmp_path, capsys):
     f = tmp_path / "CHANGELOG.md"
     f.write_text(
-        GOOD.replace("### Added", "### Docs").replace(
+        GOOD.replace("### Added", "### Changed").replace(
             "[1.0.0]: https://x/releases/v1.0.0\n", ""
         )
     )
     assert main([str(f)]) == 1
     c = tmp_path / "lint.toml"
-    c.write_text('sections = ["Docs", "Fixed"]\nrequire-links = false\n')
+    c.write_text('sections = ["Changed", "Fixed"]\nrequire-links = false\n')
     assert main(["--config", str(c), str(f)]) == 0
     c.write_text("[tool.keepmeachangelog]\nbogus = 1\n")
     assert main(["--config", str(c), str(f)]) == 2
@@ -88,13 +88,13 @@ def test_config(tmp_path, capsys):
 def test_validation_depth(tmp_path):
     t = GOOD.replace("2024-01-01", "2025-99-99")
     assert lint(t)
-    assert lint(t, Config(validation_depth=2)) == []
+    assert lint(t, Config(validation_depth=1)) == []
     f = tmp_path / "CHANGELOG.md"
     f.write_text(t)
     assert main([str(f)]) == 1
-    assert main(["--validation-depth", "2", str(f)]) == 0
+    assert main(["--validation-depth", "1", str(f)]) == 0
     c = tmp_path / "c.toml"
-    c.write_text("validation-depth = 2\n")
+    c.write_text("validation-depth = 1\n")
     assert main(["--config", str(c), str(f)]) == 0
 
 
@@ -270,3 +270,92 @@ def test_canonical_section_alias_not_configured():
 
 def msgs_c(t, c):
     return [p.message for p in lint(t, c)]
+
+
+def _cl(*entries):
+    body = "# Changelog\n\n"
+    for ver, date, sec in entries:
+        body += f"## [{ver}] - {date}\n\n### {sec}\n\n- x\n\n"
+    return body.rstrip("\n") + "\n"
+
+
+def test_sections_allowed_per_release_type():
+    # patch release may only have Fixed/Security
+    t = _cl(("1.0.1", "2024-02-01", "Added"), ("1.0.0", "2024-01-01", "Added"))
+    assert any("only 'fixed, security'" in x and "patch" in x for x in msgs_nolinks(t))
+    # minor release cannot have Removed
+    t = _cl(("1.1.0", "2024-02-01", "Removed"), ("1.0.0", "2024-01-01", "Added"))
+    assert any("minor release" in x for x in msgs_nolinks(t))
+    # major allows everything; the oldest entry has no predecessor
+    t = _cl(("2.0.0", "2024-02-01", "Removed"), ("1.0.0", "2024-01-01", "Removed"))
+    assert not any("only '" in x for x in msgs_nolinks(t))
+    # valid patch
+    t = _cl(("1.0.1", "2024-02-01", "Fixed"), ("1.0.0", "2024-01-01", "Added"))
+    assert not any("only '" in x for x in msgs_nolinks(t))
+
+
+def test_release_diff_cases():
+    from keepmeachangelog.linter import _release_diff
+
+    assert _release_diff("1.0.0", "1.0.0+b") is None
+    assert _release_diff("1.0.0", "1.0.1") == "patch"
+    assert _release_diff("1.0.0", "1.1.0") == "minor"
+    assert _release_diff("1.0.0", "2.0.0") == "major"
+    assert _release_diff("2.0.0-rc.1", "2.0.0") == "major"
+    assert _release_diff("1.1.0-rc.1", "1.1.0") == "minor"
+    assert _release_diff("1.0.1-rc.1", "1.0.1") == "patch"
+    assert _release_diff("1.0.0-rc.1", "1.1.0") == "major"  # node-semver quirk
+    assert _release_diff("1.0.0-rc.1", "1.0.0-rc.2") == "prerelease"
+    assert _release_diff("1.0.0", "1.0.0-rc.2") == "major"
+
+
+def test_validation_depth_ignores_unreleased_and_window():
+    t = _cl(("1.0.1", "2024-02-01", "Added"), ("1.0.0", "2024-01-01", "Added"))
+    t = t.replace("# Changelog\n\n", "# Changelog\n\n## [Unreleased]\n\n", 1)
+    # the pair (1.0.1, 1.0.0) is outside a window of 1 released version
+    assert not any("only '" in x for x in msgs_nolinks(t, Config(validation_depth=1)))
+    assert any("only '" in x for x in msgs_nolinks(t, Config(validation_depth=2)))
+
+
+def test_empty_section_in_unreleased_is_allowed():
+    t = "# Changelog\n\n## [Unreleased]\n\n### Added\n\n## [1.0.0] - 2024-01-01\n\n### Added\n\n- x\n"
+    assert not any("empty section" in x for x in msgs_nolinks(t))
+
+
+def test_required_version(tmp_path):
+    t = _cl(("1.0.0", "2024-01-01", "Added"))
+    assert any(
+        "no changelog entry for version 2.0.0" in x
+        for x in msgs_nolinks(t, Config(version="2.0.0"))
+    )
+    assert not any(
+        "no changelog entry" in x for x in msgs_nolinks(t, Config(version="1.0.0"))
+    )
+    f = tmp_path / "CHANGELOG.md"
+    f.write_text(t)
+    py = tmp_path / "pyproject.toml"
+    py.write_text('[project]\nversion = "9.9.9"\n')
+    assert main(["--version-from", str(py), str(f)]) == 1
+    assert main(["--version", "1.0.0", str(f)]) == 1  # no links => still failing
+    py.write_text("[project]\n")
+    assert main(["--version-from", str(py), str(f)]) == 2
+    c = tmp_path / "c.toml"
+    c.write_text(f'version-from = "{py}"\n')
+    assert main(["--config", str(c), str(f)]) == 2
+    c.write_text('version = "1.0.0"\nrequire-links = false\n')
+    assert main(["--config", str(c), str(f)]) == 0
+
+
+def msgs_nolinks(t, c=None):
+    from dataclasses import replace
+
+    return [p.message for p in lint(t, replace(c or Config(), require_links=False))]
+
+
+def test_config_repo_url_and_tag_prefix(tmp_path):
+    from keepmeachangelog.cli import load_config
+
+    c = tmp_path / "c.toml"
+    c.write_text('repo-url = "https://x.io/o/r"\ntag-prefix = "rel-"\n')
+    cfg = load_config(c)
+    assert (cfg.repo_url, cfg.tag_prefix) == ("https://x.io/o/r", "rel-")
