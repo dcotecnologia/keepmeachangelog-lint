@@ -13,6 +13,8 @@
 
 Linter for changelogs following [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
+To use it in GitHub Actions, see [`keepmeachangelog-action`](https://github.com/dcotecnologia/keepmeachangelog-action), which reads a changelog entry and validates it with this linter.
+
 ## pre-commit
 
 ```yaml
@@ -86,7 +88,7 @@ So the pre-commit hook fails on whatever would fail the release workflow:
 - `validation-depth` counts the newest N released versions (Unreleased excluded); the oldest one in the window is not compared with a predecessor
 - `--version-from pyproject.toml` fails if the changelog has no entry for the project version (the action's "No log entry found for version X")
 
-Not covered: `version_scheme: pep440`. Note the action only validates when `validation_level` is `warn` or `error` (default `none`).
+Not covered: `version_scheme: pep440`. Note the action only validates when `validation_level` is `warn` or `error` (default `error`).
 
 ## License
 
