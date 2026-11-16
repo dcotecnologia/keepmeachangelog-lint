@@ -1,12 +1,22 @@
 # keepmeachangelog
 
+[![Tests](https://github.com/dcotecnologia/keepmeachangelog-lint/actions/workflows/tests.yml/badge.svg)](https://github.com/dcotecnologia/keepmeachangelog-lint/actions/workflows/tests.yml)
+[![Coverage](https://raw.githubusercontent.com/dcotecnologia/keepmeachangelog-lint/badges/coverage.svg)](https://github.com/dcotecnologia/keepmeachangelog-lint/actions/workflows/tests.yml)
+[![Release](https://github.com/dcotecnologia/keepmeachangelog-lint/actions/workflows/release.yml/badge.svg)](https://github.com/dcotecnologia/keepmeachangelog-lint/actions/workflows/release.yml)
+[![Latest release](https://img.shields.io/github/v/release/dcotecnologia/keepmeachangelog-lint)](https://github.com/dcotecnologia/keepmeachangelog-lint/releases/latest)
+[![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://pre-commit.com/)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![Keep a Changelog](https://img.shields.io/badge/changelog-Keep%20a%20Changelog%201.1.0-E05735)](https://keepachangelog.com/en/1.1.0/)
+[![SemVer](https://img.shields.io/badge/semver-2.0.0-blue)](https://semver.org/spec/v2.0.0.html)
+
 Linter for changelogs following [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ## pre-commit
 
 ```yaml
 repos:
-  - repo: https://github.com/dcotecnologia/keepmeachangelog-linter
+  - repo: https://github.com/dcotecnologia/keepmeachangelog-lint
     rev: v0.1.0
     hooks:
       - id: keepmeachangelog-lint

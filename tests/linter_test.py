@@ -359,3 +359,14 @@ def test_config_repo_url_and_tag_prefix(tmp_path):
     c.write_text('repo-url = "https://x.io/o/r"\ntag-prefix = "rel-"\n')
     cfg = load_config(c)
     assert (cfg.repo_url, cfg.tag_prefix) == ("https://x.io/o/r", "rel-")
+
+
+def test_equal_versions_are_skipped_in_section_rule():
+    t = _cl(("1.0.0", "2024-02-01", "Added"), ("1.0.0", "2024-01-01", "Added"))
+    assert not any("only '" in x for x in msgs_nolinks(t))
+
+
+def test_release_diff_prerelease_to_different_release():
+    from keepmeachangelog.linter import _release_diff
+
+    assert _release_diff("1.2.3-rc.1", "1.3.0") == "minor"
