@@ -1,0 +1,84 @@
+name: Tests
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - "**"
+    paths-ignore:
+      - "**.md"
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  tests:
+    name: Tests (python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v10.3.3
+
+      - name: Run unit tests (100% coverage required)
+        run: uv run --python ${{ matrix.python-version }} --group test pytest
+
+      - name: Coverage summary
+        if: ${{ always() && matrix.python-version == '3.14' }}
+        run: uv run --python ${{ matrix.python-version }} --group test coverage report --rcfile=pyproject.toml --format=markdown >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage report
+        if: ${{ matrix.python-version == '3.14' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-xml
+          path: coverage.xml
+
+  coverage-badge:
+    name: Coverage badge
+    needs: tests
+    if: ${{ github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Download coverage report
+        uses: actions/download-artifact@v7
+        with:
+          name: coverage-xml
+
+      - name: Generate badge
+        run: python3 scripts/coverage_badge.py coverage.xml "${RUNNER_TEMP}/coverage.svg"
+
+      - name: Publish badge to the badges branch
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin badges > /dev/null; then
+            git fetch origin badges
+            git checkout -f -B badges origin/badges
+          else
+            git checkout --orphan badges
+            git rm -rf . -q
+          fi
+          cp "${RUNNER_TEMP}/coverage.svg" coverage.svg
+          git add coverage.svg
+          if git diff --cached --quiet; then
+            echo "Badge unchanged"
+          else
+            git commit -m "chore: update coverage badge"
+            git push origin badges
+          fi
