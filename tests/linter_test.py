@@ -148,27 +148,30 @@ def test_allow_empty_sections():
     assert lint(t, Config(allow_empty_sections=True)) == []
 
 
-MESSY = """# changelog
-intro text   
-## 1.0.1 - 2024-02-01
-### fixes
-- a  
-
-
-- b
-## [v1.0.0]-2024-01-01 [YANKED]
-### Added:
-- c
-```
-keep   this
-
-as is
-```
-### Weird
-[1.0.0]: https://github.com/o/r/releases/tag/v1.0.0
-[9.9.9]: https://github.com/o/r/releases/tag/v9.9.9
-[Keep a Changelog]: https://keepachangelog.com/en/1.1.0/
-"""
+MESSY_LINES = [
+    "# changelog",
+    "intro text   ",  # trailing spaces on purpose
+    "## 1.0.1 - 2024-02-01",
+    "### fixes",
+    "- a  ",
+    "",
+    "",
+    "- b",
+    "## [v1.0.0]-2024-01-01 [YANKED]",
+    "### Added:",
+    "- c",
+    "```",
+    "keep   this",
+    "",
+    "as is",
+    "```",
+    "### Weird",
+    "[1.0.0]: https://github.com/o/r/releases/tag/v1.0.0",
+    "[9.9.9]: https://github.com/o/r/releases/tag/v9.9.9",
+    "[Keep a Changelog]: https://keepachangelog.com/en/1.1.0/",
+    "",
+]
+MESSY = "\n".join(MESSY_LINES)
 
 FIXED = """# Changelog
 

@@ -79,7 +79,7 @@ def _semver_key(v: str) -> tuple:
 
 
 def _release_diff(older: str, newer: str) -> str | None:
-    """Replicate node-semver `diff` (pre* collapsed): major/minor/patch/prerelease."""
+    """Replicate node-semver `diff`, with pre* collapsed."""
     ko, kn = _semver_key(older), _semver_key(newer)
     if ko == kn:
         return None
