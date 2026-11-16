@@ -1,0 +1,50 @@
+[project]
+name = "keepmeachangelog"
+version = "0.1.0"
+description = "Linter for CHANGELOG files following Keep a Changelog 1.1.0"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+keepmeachangelog = "keepmeachangelog.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/keepmeachangelog"]
+
+[dependency-groups]
+dev = [
+    "pyright>=1.1.414",
+]
+test = [
+    "pytest>=9.2.0",
+    "pytest-cov>=7.1.0",
+]
+
+[tool.pytest.ini_options]
+log_cli = false
+log_cli_level = "WARNING"
+minversion = "9.0"
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "--import-mode=importlib -s --cov=. --log-level=WARN --strict-markers --tb=short --cov-report=term-missing --cov-report=xml --cov-fail-under=100 --cov-config=pyproject.toml"
+
+[tool.coverage.run]
+branch = true
+source = ["src"]
+omit = ["**/__init__.py", "tests/*"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+precision = 2
+
+[tool.pyright]
+pythonVersion = "3.11"
+include = ["src", "tests"]
+extraPaths = ["src"]
+typeCheckingMode = "standard"
