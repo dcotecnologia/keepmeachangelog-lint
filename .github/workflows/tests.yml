@@ -15,6 +15,30 @@ concurrency:
 permissions:
   contents: read
 jobs:
+  pre-commit:
+    name: Pre-commit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup python (default_language_version of the pre-commit config)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v10.3.3
+
+      - name: Cache pre-commit environments
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Run pre-commit on all files
+        run: uvx pre-commit run --all-files --show-diff-on-failure
+
   tests:
     name: Tests (python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
