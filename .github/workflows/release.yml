@@ -28,7 +28,7 @@ jobs:
           echo "project_version=${version}" >> "$GITHUB_OUTPUT"
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@v10.3.0
+        uses: astral-sh/setup-uv@v10.3.3
 
       - name: Lint the changelog with this project
         run: uv run keepmeachangelog --validation-depth 10 --version-from pyproject.toml CHANGELOG.md
