@@ -3,8 +3,23 @@ name = "keepmeachangelog"
 version = "0.1.0"
 description = "Linter for CHANGELOG files following Keep a Changelog 1.1.0"
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+keywords = ["changelog", "keep-a-changelog", "lint", "linter", "pre-commit", "semver"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Quality Assurance",
+]
 requires-python = ">=3.11"
 dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/dcotecnologia/keepmeachangelog-lint"
+Repository = "https://github.com/dcotecnologia/keepmeachangelog-lint"
+Changelog = "https://github.com/dcotecnologia/keepmeachangelog-lint/blob/main/CHANGELOG.md"
 
 [project.scripts]
 keepmeachangelog = "keepmeachangelog.cli:main"

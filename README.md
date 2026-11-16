@@ -86,3 +86,7 @@ So the pre-commit hook fails on whatever would fail the release workflow:
 - `--version-from pyproject.toml` fails if the changelog has no entry for the project version (the action's "No log entry found for version X")
 
 Not covered: `version_scheme: pep440`. Note the action only validates when `validation_level` is `warn` or `error` (default `none`).
+
+## License
+
+[MIT](LICENSE)
