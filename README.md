@@ -6,10 +6,11 @@ Linter for changelogs following [Keep a Changelog 1.1.0](https://keepachangelog.
 
 ```yaml
 repos:
-  - repo: https://github.com/dcotecnologia/keepmeachangelog
+  - repo: https://github.com/dcotecnologia/keepmeachangelog-linter
     rev: v0.1.0
     hooks:
       - id: keepmeachangelog-lint
+        args: [--fix]
 ```
 
 ### Pointing at a specific file
@@ -44,10 +45,14 @@ title = "Changelog"                 # expected "# <title>"
 sections = ["Added", "Changed", "Deprecated", "Removed", "Fixed", "Security"]
 require-links = true                # each version needs a "[x.y.z]: url"
 allow-empty-sections = false
-validation-depth = 10              # optional: only the latest N versions (incl. Unreleased); omit = all
+validation-depth = 10              # optional: only the latest N released versions (Unreleased not counted); omit = all
+version = "1.4.0"                  # optional: the changelog must have an entry for it
+version-from = "pyproject.toml"    # optional: same, read from [project].version
+repo-url = "https://github.com/o/r"  # optional: enables generating/fixing version links
+tag-prefix = "v"
 ```
 
-`--validation-depth N` on the command line overrides the file.
+`--validation-depth N`, `--version X` and `--version-from pyproject.toml` on the command line override the file.
 
 In pre-commit: `args: [--config, .changelog-lint.toml]`.
 
@@ -58,3 +63,16 @@ In pre-commit: `args: [--config, .changelog-lint.toml]`.
 - Latest version first (by version and date); no duplicate versions
 - Sections only `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security`; no duplicates, none empty
 - Each version has a link reference `[x.y.z]: <url>`
+
+### Same checks as `mindsers/changelog-reader-action`
+
+So the pre-commit hook fails on whatever would fail the release workflow:
+
+- every released version is a valid SemVer; versions are in strictly increasing order (latest first)
+- a section must have listed items (`Unreleased` is exempt)
+- sections allowed by release type, comparing each version with the previous one:
+  patch: `Fixed`, `Security`; minor: also `Added`, `Changed`, `Deprecated`; major/other: also `Removed`
+- `validation-depth` counts the newest N released versions (Unreleased excluded); the oldest one in the window is not compared with a predecessor
+- `--version-from pyproject.toml` fails if the changelog has no entry for the project version (the action's "No log entry found for version X")
+
+Not covered: `version_scheme: pep440`. Note the action only validates when `validation_level` is `warn` or `error` (default `none`).
