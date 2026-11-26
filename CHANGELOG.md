@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [Unreleased]
 
+### Added
+
+- Add an npm wrapper package (`npm/`) so the linter runs with `npx`, `bunx` and `yarn dlx`; it runs the Python package pinned to the same version through `uvx`, `pipx` or `python`
+- Publish the npm package to npm from the release workflow
+
 ## [0.2.0] - 2026-11-26
 
 ### Added
