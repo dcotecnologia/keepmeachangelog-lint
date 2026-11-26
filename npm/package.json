@@ -1,0 +1,32 @@
+{
+    "bin": {
+        "keepmeachangelog": "bin/cli.js"
+    },
+    "description": "Linter for CHANGELOG files following Keep a Changelog 1.1.0 (wrapper around the Python package)",
+    "engines": {
+        "node": ">=18"
+    },
+    "files": [
+        "bin",
+        "README.md"
+    ],
+    "homepage": "https://github.com/dcotecnologia/keepmeachangelog-lint",
+    "keywords": [
+        "changelog",
+        "keep-a-changelog",
+        "lint",
+        "linter",
+        "semver"
+    ],
+    "license": "MIT",
+    "name": "keepmeachangelog",
+    "repository": {
+        "directory": "npm",
+        "type": "git",
+        "url": "git+https://github.com/dcotecnologia/keepmeachangelog-lint.git"
+    },
+    "scripts": {
+        "test": "node --test"
+    },
+    "version": "0.2.0"
+}
