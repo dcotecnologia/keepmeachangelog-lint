@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 import tomllib
 from dataclasses import replace
@@ -45,8 +46,11 @@ def load_config(path: Path) -> Config:
 
 
 def _version_from(path: str) -> str:
-    """Read [project].version from a pyproject.toml."""
-    return tomllib.loads(Path(path).read_text(encoding="utf-8"))["project"]["version"]
+    """Read the version from a package.json (".json") or a pyproject.toml."""
+    text = Path(path).read_text(encoding="utf-8")
+    if Path(path).suffix == ".json":
+        return json.loads(text)["version"]
+    return tomllib.loads(text)["project"]["version"]
 
 
 def main(argv: list[str] | None = None) -> int:

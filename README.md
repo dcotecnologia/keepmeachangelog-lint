@@ -48,6 +48,23 @@ with the path as an argument:
 
 Or run directly: `keepmeachangelog CHANGELOG.md`.
 
+### Node projects (package.json)
+
+The linter only reads the changelog, so it works in any project; pre-commit builds its own
+Python environment for the hook, so the Node project needs no Python setup.
+Use `--version-from package.json` to require an entry for the `version` in `package.json`:
+
+```yaml
+repos:
+  - repo: https://github.com/dcotecnologia/keepmeachangelog-lint
+    rev: v0.1.0
+    hooks:
+      - id: keepmeachangelog-lint
+        args: [--version-from, package.json]
+```
+
+Without pre-commit: `uvx keepmeachangelog --version-from package.json CHANGELOG.md`.
+
 ## Config
 
 `--config path/to/file.toml` (keys at top level, or under `[tool.keepmeachangelog]`
@@ -60,7 +77,7 @@ require-links = true                # each version needs a "[x.y.z]: url"
 allow-empty-sections = false
 validation-depth = 10              # optional: only the latest N released versions (Unreleased not counted); omit = all
 version = "1.4.0"                  # optional: the changelog must have an entry for it
-version-from = "pyproject.toml"    # optional: same, read from [project].version
+version-from = "pyproject.toml"    # optional: same, read from [project].version (or "package.json" -> version)
 repo-url = "https://github.com/o/r"  # optional: enables generating/fixing version links
 tag-prefix = "v"
 ```

@@ -349,6 +349,20 @@ def test_required_version(tmp_path):
     assert main(["--config", str(c), str(f)]) == 0
 
 
+def test_version_from_package_json(tmp_path):
+    f = tmp_path / "CHANGELOG.md"
+    f.write_text(GOOD)
+    pkg = tmp_path / "package.json"
+    pkg.write_text('{"name": "x", "version": "9.9.9"}')
+    assert main(["--version-from", str(pkg), str(f)]) == 1  # no entry for 9.9.9
+    pkg.write_text('{"name": "x", "version": "1.1.0"}')
+    assert main(["--version-from", str(pkg), str(f)]) == 0
+    pkg.write_text('{"name": "x"}')  # no version
+    assert main(["--version-from", str(pkg), str(f)]) == 2
+    pkg.write_text("{not json")
+    assert main(["--version-from", str(pkg), str(f)]) == 2
+
+
 def msgs_nolinks(t, c=None):
     from dataclasses import replace
 
