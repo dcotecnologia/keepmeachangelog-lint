@@ -378,7 +378,34 @@ def test_version_and_help_words(capsys, tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)  # a real file named "version" is still linted
     (tmp_path / "version").write_text(GOOD)
     assert main(["version"]) == 0
-    assert capsys.readouterr().out == ""
+    assert "OK" in capsys.readouterr().out
+
+
+def test_version_when_not_installed(capsys, monkeypatch):
+    from importlib.metadata import PackageNotFoundError
+
+    from keepmeachangelog import cli
+
+    def missing(_name):
+        raise PackageNotFoundError
+
+    monkeypatch.setattr(cli, "_dist_version", missing)
+    monkeypatch.setenv("KEEPMEACHANGELOG_VERSION", "7.8.9")
+    assert main(["version"]) == 0
+    assert capsys.readouterr().out.strip() == "7.8.9"
+    monkeypatch.delenv("KEEPMEACHANGELOG_VERSION")
+    assert main(["version"]) == 0
+    assert capsys.readouterr().out.strip() == "unknown"
+
+
+def test_success_message_only_when_valid(tmp_path, capsys):
+    f = tmp_path / "CHANGELOG.md"
+    f.write_text(GOOD)
+    assert main([str(f)]) == 0
+    assert capsys.readouterr().out == f"{f}: OK (Keep a Changelog 1.1.0)\n"
+    f.write_text("# Wrong\n")
+    assert main([str(f)]) == 1
+    assert "OK" not in capsys.readouterr().out
 
 
 def msgs_nolinks(t, c=None):

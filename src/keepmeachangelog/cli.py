@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import tomllib
 from dataclasses import replace
+from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _dist_version
 from pathlib import Path
 
@@ -54,6 +56,14 @@ def _version_from(path: str) -> str:
     return tomllib.loads(text)["project"]["version"]
 
 
+def _installed_version() -> str:
+    """Return the installed version, or the one the npm wrapper passes in."""
+    try:
+        return _dist_version("keepmeachangelog")
+    except PackageNotFoundError:
+        return os.environ.get("KEEPMEACHANGELOG_VERSION", "unknown")
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(
         prog="keepmeachangelog",
@@ -84,7 +94,7 @@ def main(argv: list[str] | None = None) -> int:
     args = p.parse_args(argv)
     if len(args.files) == 1 and not Path(args.files[0]).exists():
         if args.files[0] == "version":
-            print(_dist_version("keepmeachangelog"))
+            print(_installed_version())
             return 0
         if args.files[0] == "help":
             p.print_help()
@@ -120,9 +130,13 @@ def main(argv: list[str] | None = None) -> int:
                 path.write_text(fixed, encoding="utf-8")
                 print(f"{f}: fixed")
                 text = fixed
-        for prob in lint(text, config):
+        problems = lint(text, config)
+        for prob in problems:
             print(f"{f}:{prob.line}: {prob.message}")
+        if problems:
             rc = 1
+        else:
+            print(f"{path}: OK (Keep a Changelog 1.1.0)")
     return rc
 
 
