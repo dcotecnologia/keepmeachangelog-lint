@@ -6,6 +6,7 @@
 [![Latest release](https://img.shields.io/github/v/release/dcotecnologia/keepmeachangelog-lint)](https://github.com/dcotecnologia/keepmeachangelog-lint/releases/latest)
 [![PyPI](https://img.shields.io/pypi/v/keepmeachangelog)](https://pypi.org/project/keepmeachangelog/)
 [![Python](https://img.shields.io/pypi/pyversions/keepmeachangelog)](https://pypi.org/project/keepmeachangelog/)
+[![npm](https://img.shields.io/npm/v/keepmeachangelog?logo=npm)](https://www.npmjs.com/package/keepmeachangelog)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://pre-commit.com/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Keep a Changelog](https://img.shields.io/badge/changelog-Keep%20a%20Changelog%201.1.0-E05735)](https://keepachangelog.com/en/1.1.0/)
@@ -50,9 +51,37 @@ Or run directly: `keepmeachangelog CHANGELOG.md`.
 
 ### Node projects (package.json)
 
-The linter only reads the changelog, so it works in any project; pre-commit builds its own
-Python environment for the hook, so the Node project needs no Python setup.
-Use `--version-from package.json` to require an entry for the `version` in `package.json`:
+The linter only reads the changelog, so it works in any project. For Node there is an
+[npm package](https://www.npmjs.com/package/keepmeachangelog), a thin wrapper that runs the
+Python tool pinned to the same version. It needs [uv](https://docs.astral.sh/uv/), `pipx` or
+Python 3.11+ on the machine.
+
+Run it without installing (npm, Bun and Yarn):
+
+```sh
+npx keepmeachangelog .
+bunx keepmeachangelog .
+yarn dlx keepmeachangelog .
+```
+
+Or add it to the project and use a script:
+
+```sh
+npm i -D keepmeachangelog      # yarn add -D keepmeachangelog / bun add -d keepmeachangelog
+```
+
+```json
+{
+  "scripts": {
+    "changelog:lint": "keepmeachangelog --version-from package.json ."
+  }
+}
+```
+
+`--version-from package.json` requires a changelog entry for the `version` in `package.json`.
+Run `npm run changelog:lint`, or call it from CI.
+
+With pre-commit, no npm package is needed (pre-commit builds its own Python environment):
 
 ```yaml
 repos:
@@ -62,8 +91,6 @@ repos:
       - id: keepmeachangelog-lint
         args: [--version-from, package.json]
 ```
-
-Without pre-commit: `uvx keepmeachangelog --version-from package.json CHANGELOG.md`.
 
 ## Config
 

@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file. The format 
 
 - Add an npm wrapper package (`npm/`) so the linter runs with `npx`, `bunx` and `yarn dlx`; it runs the Python package pinned to the same version through `uvx`, `pipx` or `python`
 - Publish the npm package to npm from the release workflow
+- Document how to use the linter in Node projects (`npx`, `bunx`, `yarn dlx`, scripts and pre-commit) and add an npm badge
 
 ## [0.2.0] - 2026-11-26
 
