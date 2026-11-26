@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [Unreleased]
 
+### Added
+
+- Bundle the Python linter inside the npm package, so `npx`, `bunx` and `yarn dlx` run the exact version of the package with the system Python 3.11+ and no download; `KEEPMEACHANGELOG_PYTHON` picks the interpreter
+- Add a success message (`<file>: OK (Keep a Changelog 1.1.0)`) when the changelog is valid
+
 ## [0.3.0] - 2026-11-26
 
 ### Added

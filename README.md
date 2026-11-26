@@ -52,9 +52,9 @@ Or run directly: `keepmeachangelog CHANGELOG.md`.
 ### Node projects (package.json)
 
 The linter only reads the changelog, so it works in any project. For Node there is an
-[npm package](https://www.npmjs.com/package/keepmeachangelog), a thin wrapper that runs the
-Python tool pinned to the same version. It needs [uv](https://docs.astral.sh/uv/), `pipx` or
-Python 3.11+ on the machine.
+[npm package](https://www.npmjs.com/package/keepmeachangelog) that ships the linter inside it,
+so the installed version is the version that runs, with no download. It needs Python 3.11+ on
+your `PATH` (`python3` or `python`); set `KEEPMEACHANGELOG_PYTHON` to pick another interpreter.
 
 Run it without installing (npm, Bun and Yarn):
 
