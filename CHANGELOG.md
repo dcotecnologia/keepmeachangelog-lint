@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-26
+
 ### Added
 
 - Bundle the Python linter inside the npm package, so `npx`, `bunx` and `yarn dlx` run the exact version of the package with the system Python 3.11+ and no download; `KEEPMEACHANGELOG_PYTHON` picks the interpreter
@@ -34,7 +36,8 @@ All notable changes to this project will be documented in this file. The format 
 - Add formatting checks (spacing, section names, headings, version links) and `--fix` to correct them
 - Add `--config`, `--validation-depth`, `--version` and `--version-from` options
 
-[Unreleased]: https://github.com/dcotecnologia/keepmeachangelog-lint/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/dcotecnologia/keepmeachangelog-lint/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/dcotecnologia/keepmeachangelog-lint/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/dcotecnologia/keepmeachangelog-lint/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/dcotecnologia/keepmeachangelog-lint/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/dcotecnologia/keepmeachangelog-lint/releases/tag/v0.1.0

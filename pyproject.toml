@@ -1,6 +1,6 @@
 [project]
 name = "keepmeachangelog"
-version = "0.3.0"
+version = "0.4.0"
 description = "Linter for CHANGELOG files following Keep a Changelog 1.1.0"
 readme = "README.md"
 license = "MIT"
