@@ -20,7 +20,7 @@ To use it in GitHub Actions, see [`keepmeachangelog-action`](https://github.com/
 ```yaml
 repos:
   - repo: https://github.com/dcotecnologia/keepmeachangelog-lint
-    rev: v0.1.0
+    rev: v0.2.0
     hooks:
       - id: keepmeachangelog-lint
         args: [--fix]
@@ -57,7 +57,7 @@ Use `--version-from package.json` to require an entry for the `version` in `pack
 ```yaml
 repos:
   - repo: https://github.com/dcotecnologia/keepmeachangelog-lint
-    rev: v0.1.0
+    rev: v0.2.0
     hooks:
       - id: keepmeachangelog-lint
         args: [--version-from, package.json]
