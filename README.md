@@ -21,7 +21,7 @@ To use it in GitHub Actions, see [`keepmeachangelog-action`](https://github.com/
 ```yaml
 repos:
   - repo: https://github.com/dcotecnologia/keepmeachangelog-lint
-    rev: v0.2.0
+    rev: v0.3.0
     hooks:
       - id: keepmeachangelog-lint
         args: [--fix]
@@ -86,7 +86,7 @@ With pre-commit, no npm package is needed (pre-commit builds its own Python envi
 ```yaml
 repos:
   - repo: https://github.com/dcotecnologia/keepmeachangelog-lint
-    rev: v0.2.0
+    rev: v0.3.0
     hooks:
       - id: keepmeachangelog-lint
         args: [--version-from, package.json]
