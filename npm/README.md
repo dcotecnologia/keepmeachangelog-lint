@@ -2,11 +2,10 @@
 
 Linter for changelogs following [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
-This package is a thin wrapper around the Python tool
-[`keepmeachangelog`](https://pypi.org/project/keepmeachangelog/). It runs the Python
-package pinned to the same version, using the first of these available on your machine:
-`uvx`, `pipx run`, or `python3 -m` (when the package is already installed).
-You need [uv](https://docs.astral.sh/uv/), pipx or Python 3.11+.
+The Python linter ([`keepmeachangelog`](https://pypi.org/project/keepmeachangelog/)) ships
+**inside this package**, so the version you install is the version that runs. Nothing is
+downloaded and it works offline. It only needs **Python 3.11 or newer** on your `PATH`
+(`python3` or `python`); set `KEEPMEACHANGELOG_PYTHON` to use a specific interpreter.
 
 ```sh
 npx keepmeachangelog .        # also: bunx keepmeachangelog . / yarn dlx keepmeachangelog .

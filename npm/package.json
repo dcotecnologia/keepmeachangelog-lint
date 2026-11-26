@@ -2,12 +2,13 @@
     "bin": {
         "keepmeachangelog": "bin/cli.js"
     },
-    "description": "Linter for CHANGELOG files following Keep a Changelog 1.1.0 (wrapper around the Python package)",
+    "description": "Linter for CHANGELOG files following Keep a Changelog 1.1.0 (bundles the Python tool; needs Python 3.11+)",
     "engines": {
         "node": ">=18"
     },
     "files": [
         "bin",
+        "python",
         "README.md"
     ],
     "homepage": "https://github.com/dcotecnologia/keepmeachangelog-lint",
@@ -26,6 +27,7 @@
         "url": "git+https://github.com/dcotecnologia/keepmeachangelog-lint.git"
     },
     "scripts": {
+        "prepack": "node scripts/sync-python.js",
         "test": "node --test"
     },
     "version": "0.3.0"

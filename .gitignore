@@ -201,3 +201,6 @@ dist/
 .coverage
 coverage.xml
 .pytest_cache/
+
+# npm wrapper: Python sources copied at pack time
+npm/python/
