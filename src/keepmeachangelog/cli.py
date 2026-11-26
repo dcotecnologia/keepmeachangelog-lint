@@ -5,6 +5,7 @@ import json
 import sys
 import tomllib
 from dataclasses import replace
+from importlib.metadata import version as _dist_version
 from pathlib import Path
 
 from .linter import Config, format_text, lint
@@ -56,7 +57,9 @@ def _version_from(path: str) -> str:
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(
         prog="keepmeachangelog",
-        description="Lint CHANGELOG files (Keep a Changelog 1.1.0)",
+        description="Lint CHANGELOG files (Keep a Changelog 1.1.0). "
+        "FILES may be files or directories (CHANGELOG.md inside); default CHANGELOG.md. "
+        "Subcommands: 'version' prints the version, 'help' prints this help.",
     )
     p.add_argument("files", nargs="*", default=["CHANGELOG.md"])
     p.add_argument("--config", type=Path, help="TOML config file")
@@ -69,8 +72,9 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--version", help="require a changelog entry for this version")
     p.add_argument(
         "--version-from",
-        metavar="PYPROJECT",
-        help="like --version, read from [project].version of a pyproject.toml",
+        metavar="FILE",
+        help="like --version, read from a pyproject.toml ([project].version) "
+        "or a package.json (version)",
     )
     p.add_argument(
         "--fix",
@@ -78,6 +82,13 @@ def main(argv: list[str] | None = None) -> int:
         help="rewrite files in canonical format (spacing, section names, links)",
     )
     args = p.parse_args(argv)
+    if len(args.files) == 1 and not Path(args.files[0]).exists():
+        if args.files[0] == "version":
+            print(_dist_version("keepmeachangelog"))
+            return 0
+        if args.files[0] == "help":
+            p.print_help()
+            return 0
     try:
         config = load_config(args.config) if args.config else Config()
         if args.version_from:
@@ -95,10 +106,12 @@ def main(argv: list[str] | None = None) -> int:
     rc = 0
     for f in args.files:
         path = Path(f)
+        if path.is_dir():
+            path = path / "CHANGELOG.md"
         try:
             text = path.read_text(encoding="utf-8")
         except OSError as e:
-            print(f"{f}: cannot read: {e}", file=sys.stderr)
+            print(f"{path}: cannot read: {e}", file=sys.stderr)
             rc = 1
             continue
         if args.fix:

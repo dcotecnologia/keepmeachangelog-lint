@@ -363,6 +363,24 @@ def test_version_from_package_json(tmp_path):
     assert main(["--version-from", str(pkg), str(f)]) == 2
 
 
+def test_directory_argument_uses_changelog_inside(tmp_path):
+    (tmp_path / "CHANGELOG.md").write_text(GOOD)
+    assert main([str(tmp_path)]) == 0
+    (tmp_path / "CHANGELOG.md").unlink()
+    assert main([str(tmp_path)]) == 1  # no CHANGELOG.md in the directory
+
+
+def test_version_and_help_words(capsys, tmp_path, monkeypatch):
+    assert main(["version"]) == 0
+    assert capsys.readouterr().out.strip()
+    assert main(["help"]) == 0
+    assert "usage:" in capsys.readouterr().out
+    monkeypatch.chdir(tmp_path)  # a real file named "version" is still linted
+    (tmp_path / "version").write_text(GOOD)
+    assert main(["version"]) == 0
+    assert capsys.readouterr().out == ""
+
+
 def msgs_nolinks(t, c=None):
     from dataclasses import replace
 
